@@ -1,38 +1,122 @@
 .App {
-  text-align: center;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.controls {
+  margin-bottom: 30px;
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.spares-input {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.spares-input label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+}
+
+.spares-input input {
+  width: 60px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.letter-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.letter-input {
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+}
+
+.letter-input label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.letter-input input {
+  width: 60px;
+  padding: 5px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #007bff;
   color: white;
+  border: none;
+  border-radius: 4px;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background-color: #0056b3;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.page {
+  page-break-after: always;
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 40px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.page h2 {
+  margin-bottom: 10px;
+}
+
+@media print {
+  .controls {
+    display: none;
   }
-  to {
-    transform: rotate(360deg);
+
+  .page h2 {
+    display: none;
   }
+
+  .pages {
+    gap: 0;
+  }
+}
+
+/* Import Cabin Condensed font */
+@import url('https://fonts.googleapis.com/css2?family=Cabin+Condensed&display=swap');
+
+/* Scrabble tile styling */
+.letter {
+  font-family: 'Cabin Condensed', sans-serif;
+  font-stretch: condensed;
+  font-weight: normal;
+  fill: black;
+}
+
+.score {
+  font-family: 'Arial', 'ArialMT', sans-serif;
+  font-weight: normal;
+  fill: black;
 }
