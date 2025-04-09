@@ -14,7 +14,7 @@ const initialLetterCounts: LetterCount = {
 };
 
 const SQUARES_PER_PAGE = 70; // 10x7 grid
-const SQUARE_SIZE = 25; // 25mm
+const DEFAULT_SQUARE_SIZE = 25; // 25mm
 const DEFAULT_EXTRA_SQUARES = 2;
 
 const SCRABBLE_SCORES: { [key: string]: number } = {
@@ -29,6 +29,7 @@ const SCRABBLE_SCORES: { [key: string]: number } = {
 function App() {
   const [letterCounts, setLetterCounts] = useState<LetterCount>(initialLetterCounts);
   const [spares, setSpares] = useState<number>(DEFAULT_EXTRA_SQUARES);
+  const [squareSize, setSquareSize] = useState<number>(DEFAULT_SQUARE_SIZE);
 
   const generateLetterArray = () => {
     const letters: string[] = [];
@@ -47,17 +48,28 @@ function App() {
     const squaresOnThisPage = Math.min(SQUARES_PER_PAGE, totalSquares - pageIndex * SQUARES_PER_PAGE);
     const rows = 7;
     const cols = 10;
-    const pageWidthMM = 279.4; // 11 inches in mm
-    const pageHeightMM = 215.9; // 8.5 inches in mm
-    const startX = (pageWidthMM - (cols * SQUARE_SIZE)) / 2;
-    const startY = (pageHeightMM - (rows * SQUARE_SIZE)) / 2;
+    // Calculate grid dimensions
+    const gridWidthMM = cols * squareSize;
+    const gridHeightMM = rows * squareSize;
+    
+    // Add some padding around the grid
+    const paddingMM = 10;
+    const viewBoxWidth = gridWidthMM + (paddingMM * 2);
+    const viewBoxHeight = gridHeightMM + (paddingMM * 2);
+    
+    // Center grid within padding
+    const startX = paddingMM;
+    const startY = paddingMM;
 
     let squares = [];
+
+    // Define SVG defs for units
+
     for (let i = 0; i < squaresOnThisPage; i++) {
       const row = Math.floor(i / cols);
       const col = i % cols;
-      const x = startX + (col * SQUARE_SIZE);
-      const y = startY + (row * SQUARE_SIZE);
+      const x = startX + (col * squareSize);
+      const y = startY + (row * squareSize);
 
       const letters = generateLetterArray();
       const letter = letters[pageIndex * SQUARES_PER_PAGE + i] || '';
@@ -65,30 +77,30 @@ function App() {
       squares.push(
         <g key={i} transform={`translate(${x},${y})`}>
           <rect
-            width={SQUARE_SIZE}
-            height={SQUARE_SIZE}
+            width={squareSize}
+            height={squareSize}
             fill="rgb(231,203,155)"
             stroke="black"
             strokeWidth="0.5"
             strokeLinejoin="round"
           />
           <text
-            x={SQUARE_SIZE/2}
-            y={SQUARE_SIZE/2}
+            x={squareSize/2}
+            y={squareSize/2}
             textAnchor="middle"
             dominantBaseline="central"
             className="letter"
-            fontSize={SQUARE_SIZE * 0.6}
+            fontSize={squareSize * 0.6}
           >
             {letter}
           </text>
           <text
-            x={SQUARE_SIZE * 0.8}
-            y={SQUARE_SIZE * 0.8}
+            x={squareSize * 0.8}
+            y={squareSize * 0.8}
             textAnchor="middle"
             dominantBaseline="central"
             className="score"
-            fontSize={SQUARE_SIZE * 0.2}
+            fontSize={squareSize * 0.2}
           >
             {letter ? SCRABBLE_SCORES[letter] : ''}
           </text>
@@ -98,9 +110,9 @@ function App() {
 
     return (
       <svg
-        width={`${pageWidthMM}mm`}
-        height={`${pageHeightMM}mm`}
-        viewBox={`0 0 ${pageWidthMM} ${pageHeightMM}`}
+        width={`${viewBoxWidth}mm`}
+        height={`${viewBoxHeight}mm`}
+        viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
         xmlns="http://www.w3.org/2000/svg"
       >
         {squares}
@@ -138,19 +150,32 @@ function App() {
 
   return (
     <div className="App">
-      <h1>Letter Grid Generator</h1>
+      <h1>Scrabble Board and Pieces Generator</h1>
       
       <div className="controls">
-        <div className="spares-input">
-          <label>
-            Spares per letter:
-            <input
-              type="number"
-              value={spares}
-              onChange={(e) => setSpares(Math.max(0, parseInt(e.target.value) || 0))}
-              min="0"
-            />
-          </label>
+        <div className="controls-row">
+          <div className="control-input">
+            <label>
+              Spares per letter:
+              <input
+                type="number"
+                value={spares}
+                onChange={(e) => setSpares(Math.max(0, parseInt(e.target.value) || 0))}
+                min="0"
+              />
+            </label>
+          </div>
+          <div className="control-input">
+            <label>
+              Square size (mm):
+              <input
+                type="number"
+                value={squareSize}
+                onChange={(e) => setSquareSize(Math.max(1, parseInt(e.target.value) || DEFAULT_SQUARE_SIZE))}
+                min="1"
+              />
+            </label>
+          </div>
         </div>
         <div className="letter-inputs">
           {Object.entries(letterCounts).map(([letter, count]) => (
@@ -167,7 +192,108 @@ function App() {
             </div>
           ))}
         </div>
-        <button onClick={() => window.print()}>Print All Pages</button>
+        <div className="print-buttons">
+          <button onClick={() => window.print()}>Print Letters</button>
+          <button onClick={() => {
+            // Load and render the template SVG
+            fetch('/scrabble.svg')
+              .then(response => response.text())
+              .then(svgText => {
+                const parser = new DOMParser();
+                const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+                
+                // Get the original SVG viewBox
+                const originalSvg = svgDoc.documentElement;
+                const viewBox = originalSvg.getAttribute('viewBox') || '0 0 100 100';
+                
+                // Get the original viewBox dimensions
+                const [,, vbWidth, vbHeight] = (originalSvg.getAttribute('viewBox') || '0 0 3300 2550').split(' ').map(Number);
+                const outputSquareSize = 25; // Size of each square in mm for printing
+                
+                // Create array of squares based on original dimensions
+                const squares: string[] = [];
+                for (let row = 0; row < 7; row++) {
+                    for (let col = 0; col < 10; col++) {
+                        const x = col * 330; // Original SVG uses 330 units per square
+                        const y = row * 330;
+                        squares.push(`
+                            <svg viewBox="${x} ${y} 330 330" width="${outputSquareSize}mm" height="${outputSquareSize}mm">
+                                <use href="#board" x="${-x}" y="${-y}"/>
+                            </svg>
+                        `);
+                    }
+                }
+                
+                // Set up page dimensions
+                const pageWidthMM = 279.4; // 11 inches
+                const pageHeightMM = 215.9; // 8.5 inches
+                const printMarginMM = 12.7; // 0.5 inches
+                
+                // Create a new document for printing
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) return;
+                
+                printWindow.document.write(`
+                  <!DOCTYPE html>
+                  <html>
+                    <head>
+                      <style>
+                        @page {
+                          size: landscape;
+                          margin: ${printMarginMM}mm;
+                        }
+                        @media print {
+                          body {
+                            width: ${10 * outputSquareSize + 2 * printMarginMM}mm;
+                            height: ${7 * outputSquareSize + 2 * printMarginMM}mm;
+                          }
+                        }
+                        body {
+                          margin: 0;
+                          padding: 0;
+                          display: flex;
+                          justify-content: center;
+                          align-items: flex-start;
+                        }
+                        .grid {
+                          display: grid;
+                          grid-template-columns: repeat(10, ${outputSquareSize}mm);
+                          grid-template-rows: repeat(7, ${outputSquareSize}mm);
+                          gap: 0;
+                          page-break-inside: avoid;
+                        }
+                        .square-container {
+                          width: ${outputSquareSize}mm;
+                          height: ${outputSquareSize}mm;
+                          box-sizing: border-box;
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div>
+                        <svg width="0" height="0" style="position: absolute; overflow: hidden">
+                          <defs>
+                            <symbol id="board" viewBox="0 0 ${vbWidth} ${vbHeight}" preserveAspectRatio="xMidYMid slice">
+                              ${svgText}
+                            </symbol>
+                          </defs>
+                        </svg>
+                        <div class="grid">
+                          ${squares.map((square, index) => `
+                            <div class="square-container" data-index="${index}">${square}</div>
+                          `).join('')}
+                        </div>
+                      </div>
+                    </body>
+                  </html>
+                `);
+                
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => printWindow.print(), 500);
+              });
+          }}>Print Board Elements</button>
+        </div>
       </div>
 
       <div className="pages">

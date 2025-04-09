@@ -11,23 +11,24 @@
   gap: 20px;
 }
 
-.spares-input {
+.controls-row {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 20px;
   padding: 10px;
   background-color: #f5f5f5;
   border-radius: 4px;
 }
 
-.spares-input label {
+.control-input label {
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: bold;
 }
 
-.spares-input input {
+.control-input input {
   width: 60px;
   padding: 5px;
   border: 1px solid #ccc;
@@ -56,6 +57,12 @@
 .letter-input input {
   width: 60px;
   padding: 5px;
+}
+
+.print-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
 
 button {
@@ -91,8 +98,42 @@ button:hover {
 }
 
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  .App {
+    padding: 0;
+    max-width: none;
+  }
+
+  h1,
   .controls {
     display: none;
+  }
+
+  .page {
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    text-align: center;
+    margin: 0;
+    page-break-after: always;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .page svg {
+    max-width: 100%;
+    max-height: 100%;
   }
 
   .page h2 {
@@ -101,6 +142,19 @@ button:hover {
 
   .pages {
     gap: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+
+
+  body {
+    margin: 0;
   }
 }
 
